@@ -1,0 +1,314 @@
+---
+title       : West Indian population in CT
+author      : Scott Gaul
+job         : Community Indicators Project
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+mode        : selfcontained # {standalone, draft}
+markdown    : kramdown
+---
+
+## What is rate of new arrivals?
+
+--- .class #id
+
+Metro Hartford has the highest rate of immigration from the West Indies in the United States ([naturalizations and new permanent residents](http://www.dhs.gov/data-statistics)). About 1 in 6 new arrivals for the region are from the West Indies. (This excludes immigration from Cuba, the Dominican Republic and Haiti.) 
+
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 7, fig.width = 14}
+#Read in files, remove na strings
+#Immigration data from here: http://www.dhs.gov/yearbook-immigration-statistics-2011-naturalizations 
+library(reshape)
+library(plyr)
+library(scales)
+library(ggplot2)
+immstats <- rbind(
+  melt(read.csv('immsuptable2d-2012.csv',na.strings = c("-","D")),
+       id.vars = c("Year","Status","Country")),
+  melt(read.csv('immsuptable2d-2011.csv', na.strings = c("-","D")),
+       id.vars = c("Year","Status","Country")),
+  melt(read.csv('natzsuptable2d-2012.csv', na.strings = c("-","D")),
+       id.vars = c("Year","Status","Country")),
+  melt(read.csv('natzsuptable2d-2011.csv', na.strings = c("-","D")),
+       id.vars = c("Year","Status","Country")))
+
+imm.west.indies <- 
+  merge(ddply(immstats,.(Status, variable), summarise,
+            total = sum(value, na.rm = T)),
+      ddply(subset(immstats, Country %in% c("Jamaica")),
+            .(Status, variable), summarise,
+            west.indies = sum(value, na.rm = T)),
+      by = c("Status","variable"))
+
+imm.west.indies <- 
+  merge(ddply(immstats,.(Status, variable), summarise,
+            total = sum(value, na.rm = T)),
+      ddply(subset(immstats, Country %in% c("Bahamas","Barbados","Jamaica","Dominica","Grenada","St. Vincent and the Grenadines","Trinidad and Tobago","Guyana","Antigua-Barbuda","Anguilla","Aruba","British Virgin Islands","Cayman Islands","Netherlands Antilles","Saint Kitts-Nevis","Saint Lucia","Turks and Caicos Islands")),
+            .(Status, variable), summarise,
+            west.indies = sum(value, na.rm = T)),
+      by = c("Status","variable"))
+
+imm.west.indies$percent.all = imm.west.indies$west.indies / imm.west.indies$total
+
+imm.west.indies$variable <- reorder(imm.west.indies$variable, imm.west.indies$percent)
+
+ggplot(data = subset(imm.west.indies, 
+                     variable %in% head(arrange(imm.west.indies, desc(percent.all)),n = 10)$variable)) + 
+  geom_bar(aes(x = variable, y = percent.all, fill = Status), stat ="identity", position = "dodge") + 
+  labs(x = NULL, y = "Percent from West Indies (2011 - 12)") +
+  coord_flip() + 
+  scale_y_continuous(labels = percent) +
+  theme_bw(base_size = 14) 
+```
+
+--- .class #id
+
+Looking only at arrivals from Jamaica, the Hartford metro region still has the highest percent nationally. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 7, fig.width = 14}
+imm.west.indies <- 
+  merge(ddply(immstats,.(Status, variable), summarise,
+            total = sum(value, na.rm = T)),
+      ddply(subset(immstats, Country %in% c("Jamaica")),
+            .(Status, variable), summarise,
+            west.indies = sum(value, na.rm = T)),
+      by = c("Status","variable"))
+
+imm.west.indies$percent.all = imm.west.indies$west.indies / imm.west.indies$total
+
+imm.west.indies$variable <- reorder(imm.west.indies$variable, imm.west.indies$percent)
+
+ggplot(data = subset(imm.west.indies, 
+                     variable %in% head(arrange(imm.west.indies, desc(percent.all)),n = 10)$variable)) + 
+  geom_bar(aes(x = variable, y = percent.all, fill = Status), stat ="identity", position = "dodge") + 
+  labs(x = NULL, y = "Percent from Jamaica (2011 - 12)") +
+  coord_flip() + 
+  scale_y_continuous(labels = percent) +
+  theme_bw(base_size = 14) 
+```
+
+--- .class #id
+
+Within the Caribbean, arrivals from Jamaica are about 80% of all arrivals for 2011-12. Guyana and St. Lucia are the next two countries with the most immigrants to metro Hartford. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height = 7, fig.width = 12}
+hartford.imm <- subset(immstats,
+                       variable == "Hartford.West.Hartford.East.Hartford..CT" & 
+                         Country %in% c("Bahamas","Barbados","Jamaica","Dominica","Grenada","St. Vincent and the Grenadines","Trinidad and Tobago","Guyana","Antigua-Barbuda","Anguilla","Aruba","British Virgin Islands","Cayman Islands","Netherlands Antilles","Saint Kitts-Nevis","Saint Lucia","Turks and Caicos Islands") & !(is.na(value)))
+
+hartford.imm$Country <- reorder(hartford.imm$Country, hartford.imm$value)
+
+ggplot(data = subset(hartford.imm, value > 0 & Year == 2012)) + 
+    geom_bar(aes(x = Country, y = value, fill = Status), stat ="identity", position = "dodge") + 
+  labs(x = NULL, y = "Number of immigrants") +
+  scale_y_continuous(labels = comma) + 
+  facet_wrap(~ Year) + 
+  coord_flip() +
+  theme_bw(base_size = 14) 
+
+#Get percent Jamaican of immigrants
+#ddply(subset(hartford.imm, Country == "Jamaica"), 
+#      .(), summarise, value = sum(value,na.rm = T))[2] / 
+#ddply(hartford.imm, .(), summarise, value = sum(value,na.rm = T))[2]
+```
+
+--- .class #id
+
+## Where does the West Indian population live now? 
+
+--- .class #id
+
+The population of Caribbean origin are in many towns in the state, although mainly the urban centers. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 12, fig.align='center'}
+#Load the UConn town-level shapefiles
+#Load the UConn shapefile
+library(maps)
+library(maptools)
+CTTowns <- readShapeSpatial(fn="../commute/townshp/wgs84/townct_37800_0000_2010_s100_census_1_shp_wgs84")
+
+#Fortify and order the CTTowns to allow ggmap to use that
+CTTowns <- fortify(CTTowns, region = "NAME10")
+CTTowns <- CTTowns[order(CTTowns$order),]
+
+#Merge with data
+choropleth=merge(CTTowns, B05006.town, by.x = "id", by.y="geo")
+choropleth=choropleth[order(choropleth$order), ]
+choropleth$newcarib=cut(choropleth$newcarib, 
+                       breaks=c(0,100,500,1000,5000,20000),
+                       include.lowest=T, dig.lab = 5)
+#Make the map
+ggplot(data = choropleth, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = newcarib)) + 
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  labs(x = NULL, y = NULL) + 
+  coord_equal() +
+  geom_polygon(data = CTTowns, colour = "grey", alpha = 0.1, size = 0.1, fill = NA) +
+  scale_fill_brewer(palette = "Purples", name = "Born in\nAnglo Caribbean") +
+  theme_minimal() 
+```
+
+--- .class #id
+
+The highest percent from West Indies and Jamaica in the state are in Bloomfield, followed by Hartford and Windsor. East Hartford also has a high rate in our region.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 12, fig.align='center'}
+#Create towns for the state
+ct.towns = geo.make(state = "CT", county = c("Hartford","Tolland","New Haven","New London","Windham","Fairfield","Litchfield","Middlesex"), county.subdivision = "*", check = F)
+
+#Percent of foreign-born population from Caribbean
+B05006 = acs.fetch(geography = ct.towns, table.number = "B05006", col.names = "pretty", year = 2012)
+
+#Total population
+B01003 = acs.fetch(geography = ct.towns, table.number = "B01003", col.names = "pretty", year = 2012)
+
+B05006.town = data.frame(geo=geography(B05006)[[1]],
+                          caribbean = as.numeric(estimate(B05006[,124])),
+                          dr = as.numeric(estimate(B05006[,129])),
+                          haiti = as.numeric(estimate(B05006[,131])),
+                          jamaica = as.numeric(estimate(B05006[,132])),
+                         guyana = as.numeric(estimate(B05006[,154])))
+
+B01003.town = data.frame(geo=geography(B01003)[[1]],
+                          population = as.numeric(estimate(B01003[,1])))
+
+B05006.town = merge(B05006.town, B01003.town, by = "geo")
+
+B05006.town$geo= gsub(" town, (Hartford|New Haven|Middlesex|Litchfield|Fairfield|Windham|New London|Tolland) County, Connecticut", "", B05006.town$geo)
+
+B05006.town$newcarib = B05006.town$caribbean - B05006.town$dr + B05006.town$guyana
+B05006.town$pct.carib = B05006.town$newcarib / B05006.town$population
+B05006.town$pct.jamaica = B05006.town$jamaica / B05006.town$population
+
+B05006.town$geo <- reorder(B05006.town$geo, B05006.town$pct.carib)
+
+ggplot(data = subset(B05006.town, pct.carib > 0.02)) + 
+  geom_point(aes(y = geo, x = pct.carib), colour = "blue", size = 3) + 
+  geom_point(aes(y = geo, x = pct.jamaica), colour = "green", size = 3) + 
+  labs(x = "Percent Caribbean / Jamaican", y = NULL) + 
+  scale_x_continuous(labels = percent) + 
+  theme_bw(base_size = 14)
+
+#Totals: subset(B05006.town, pct.carib > 0.03)[c(1,9,10)]
+```
+
+--- .class #id
+
+The Jamaican population are mostly clustered in the smaller set of towns around Hartford. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 12, fig.align='center'}
+#And then for Jamaica
+choropleth=merge(CTTowns, B05006.town, by.x = "id", by.y="geo")
+choropleth=choropleth[order(choropleth$order), ]
+choropleth$pct.jamaica=cut(choropleth$pct.jamaica, 
+                       breaks=c(0,.02,.05,.1,.25),
+                       include.lowest=T, dig.lab = 5)
+#Make the map
+ggplot(data = choropleth, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pct.jamaica)) + 
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  labs(x = NULL, y = NULL) + 
+  coord_equal() +
+  geom_polygon(data = CTTowns, colour = "grey", alpha = 0.1, size = 0.1, fill = NA) +
+  scale_fill_brewer(palette = "Purples", name = "Born in\nJamaica") +
+  theme_minimal() 
+```
+
+--- .class #id
+## Are there students that speak Patois at home? 
+
+--- .class #id
+
+Some Connecticut students are recorded as speaking Patois (or 'Patwa') as a second language at home. For the state, Patois was recorded as a home language for about 200 students in 2013-14, or about the same as the occurence of Karen and Khmer(Cambodian). About [30,000 Connecticut residents](http://factfinder2.census.gov/faces/tableservices/jsf/pages/productview.xhtml?pid=ACS_12_1YR_B05006&prodType=table) were born in Jamaica, half living in metro Hartford.
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 14, fig.align='center'}
+ell <- read.csv('NON ENGLISH LANGUAGES BY DISTRICT 2011-13.csv',
+                na.strings = c("<=5"))
+
+#Clean up the languages that sound like mistakes
+ell$Language <- str_trim(ell$Language)
+ell$Language <- gsub(pattern = "Patwa", replacement = "Patois", ell$Language)
+ell$Language <- gsub(pattern = "Creole-Jaotoam", replacement = "Creole-Haitian", ell$Language)
+ell$Language <- gsub(pattern = "Kiswhali", replacement = "Swahili", ell$Language)
+ell$Language <- gsub(pattern = "Rawandan", replacement = "Kinyarwanda", ell$Language)
+ell$Language <- gsub(pattern = "Tagalog", replacement = "Pilipino (Filipino)", ell$Language)
+
+library(stringr)
+ell$District <- str_trim(ell$District, side = "both")
+
+ell13 <- subset(ddply(ell,.(Language, School.Year),summarise,
+                           Students = sum(Students, na.rm = T),
+                           ELLs = sum(ELLs, na.rm = T)),
+                     Students > 100 & Language != "Spanish" & School.Year == "2013-14")
+ell13$Language <- reorder(ell13$Language, ell13$Students)
+
+ggplot(data = ell13,
+       aes(y = Students, x = Language)) + 
+  geom_bar(width = 0.5, stat = "identity") + 
+  labs(x = NULL, y = "Students speaking language at home (excl. Spanish)") + 
+  coord_flip() +
+  theme_bw(base_size = 14)
+```
+
+--- .class #id
+
+Of students recorded as speaking a second language at home, a smaller number are recorded as English-language learners. In this case, about 30 students were recorded as Patois-speakers in need of English language assistance in the state. (A few districts have fewer than 5 students and don't report exact results.)
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 14, fig.align='center'}
+ell13$Language <- reorder(ell13$Language, ell13$ELLs)
+
+ggplot(data = ell13,
+       aes(y = ELLs, x = Language)) + 
+  geom_bar(width = 0.5, stat = "identity") + 
+  coord_flip() +
+  labs(x = NULL, y = "Home language for English-language learners (excl. Spanish)") + 
+  theme_bw(base_size = 14)
+```
+
+--- .class #id
+As a percent of total district enrollment, Patois speakers only comprise a significant share at Jumoke Academy, between 15 - 20% of students come from Patois-speaking households. This is similar to the base population rates in Hartford, Bloomfield and Windsor. No other district in the region reports more than 0.7% students coming from a Patois-speaking household. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 14, fig.align='center'}
+ell.enroll <- subset(merge(ell,
+                           read.csv('enrollment.csv', na.strings = c("*")),
+                           by.x = c("School.Year","District"),
+                           by.y = c("School.Year","district.name")),
+                     !(is.na(Students)))
+
+ell.enroll$pct.students = ell.enroll$Students / ell.enroll$Total
+ell.enroll$pct.ell = ell.enroll$ELLs / ell.enroll$Total
+
+ggplot(data = ddply(subset(ell.enroll, 
+                           Language %in% c("Patois","Patwa") & pct.students >0),
+                    .(District,School.Year,Language), 
+                    summarise,
+                    pct.students = sum(pct.students, na.rm = T),
+                    pct.ell = sum(pct.ell, na.rm = T))) + 
+  geom_bar(aes(x = School.Year, y = pct.students), width =.5, stat="identity") + 
+  scale_y_continuous(labels = percent) + 
+  facet_wrap(~ District, nrow = 1) + 
+    theme_bw(base_size = 14)
+```
+
+--- .class #id
+
+In addition, for English-language learners, no school district has more than 0.6% students registered as Patois-speakers in need of English language assistance and only three districts (Hartford, Windsor and Bloomfield) register more than 5 students total. 
+
+```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 14, fig.align='center'}
+ggplot(data = ddply(subset(ell.enroll, 
+                           Language %in% c("Patois","Patwa") & pct.students >0),
+                    .(District,School.Year,Language), 
+                    summarise,
+                    pct.students = sum(pct.students, na.rm = T),
+                    pct.ell = sum(pct.ell, na.rm = T))) + 
+  geom_bar(aes(x = School.Year, y = pct.ell), width =.5, stat="identity") + 
+  scale_y_continuous(labels = percent) + 
+  facet_wrap(~ District, nrow = 1) + 
+    theme_bw(base_size = 14)
+```
+
+
+
