@@ -289,6 +289,7 @@ ggplot(data = ddply(subset(ell.enroll,
                     pct.ell = sum(pct.ell, na.rm = T))) + 
   geom_bar(aes(x = School.Year, y = pct.students), width =.5, stat="identity") + 
   scale_y_continuous(labels = percent) + 
+    labs(x = "School Year", y = "Students from Patois-speaking households as percent of total enrollment") + 
   facet_wrap(~ District, nrow = 1) + 
     theme_bw(base_size = 14)
 ```
@@ -306,8 +307,9 @@ ggplot(data = ddply(subset(ell.enroll,
                     pct.ell = sum(pct.ell, na.rm = T))) + 
   geom_bar(aes(x = School.Year, y = pct.ell), width =.5, stat="identity") + 
   scale_y_continuous(labels = percent) + 
+  labs(x = "School Year", y = "ELL students as percent of total enrollment") + 
   facet_wrap(~ District, nrow = 1) + 
-    theme_bw(base_size = 14)
+    theme_bw(base_size = 13)
 ```
 
 
