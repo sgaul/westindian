@@ -289,14 +289,14 @@ ggplot(data = ddply(subset(ell.enroll,
                     pct.ell = sum(pct.ell, na.rm = T))) + 
   geom_bar(aes(x = School.Year, y = pct.students), width =.5, stat="identity") + 
   scale_y_continuous(labels = percent) + 
-    labs(x = "School Year", y = "Students from Patois-speaking households as percent of total enrollment") + 
-  facet_wrap(~ District, nrow = 1) + 
+    labs(x = "School Year", y = "Patois-speaking students as % of  enrollment") + 
+  facet_wrap(~ District, nrow = 2) + 
     theme_bw(base_size = 14)
 ```
 
 --- .class #id
 
-In addition, for English-language learners, no school district has more than 0.6% students registered as Patois-speakers in need of English language assistance and only three districts (Hartford, Windsor and Bloomfield) register more than 5 students total. 
+In addition, for English-language learners, no school district has more than 1.25% students registered as Patois-speakers in need of English language assistance and only four districts (Achievement First Hartford, Hartford, Windsor and Bloomfield) register more than 5 students total. 
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 14, fig.align='center'}
 ggplot(data = ddply(subset(ell.enroll, 
@@ -307,8 +307,8 @@ ggplot(data = ddply(subset(ell.enroll,
                     pct.ell = sum(pct.ell, na.rm = T))) + 
   geom_bar(aes(x = School.Year, y = pct.ell), width =.5, stat="identity") + 
   scale_y_continuous(labels = percent) + 
-  labs(x = "School Year", y = "ELL students as percent of total enrollment") + 
-  facet_wrap(~ District, nrow = 1) + 
+  labs(x = "School Year", y = "ELL students as % of enrollment") + 
+  facet_wrap(~ District, nrow = 2) + 
     theme_bw(base_size = 13)
 ```
 

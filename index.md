@@ -74,7 +74,7 @@ As a percent of total district enrollment, Patois speakers only comprise a signi
 
 --- .class #id
 
-In addition, for English-language learners, no school district has more than 0.6% students registered as Patois-speakers in need of English language assistance and only three districts (Hartford, Windsor and Bloomfield) register more than 5 students total. 
+In addition, for English-language learners, no school district has more than 1.25% students registered as Patois-speakers in need of English language assistance and only four districts (Achievement First Hartford, Hartford, Windsor and Bloomfield) register more than 5 students total. 
 
 <img src="assets/fig/unnamed-chunk-10.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
 
